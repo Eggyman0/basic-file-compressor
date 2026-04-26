@@ -64,7 +64,7 @@ bool Huffman::encodeFile(const std::string &inputFile, const std::string &output
     // Header: number of valid bits in encoded file
     // Calculating total number of encoded bits
     int encodedBits = 0;
-    for (int i = 0; codeTable[i].length != 0; i++) {
+    for (int i = 0; i < tableSize; i++) {
         encodedBits += codeTable[i].length * freqTable[codeTable[i].ch];
     }
     uint32_t bitCount = static_cast<uint32_t>(encodedBits);
