@@ -42,7 +42,7 @@ bool Huffman::encodeFile(const std::string &inputFile, const std::string &output
 
     buildCodeTable(codeTable, tableSize);
 
-    std::vector<unsigned char> packedBytes = bytePack(codeTable, inputData);
+    std::vector<unsigned char> packedBytes = bytePack(codeTable, tableSize, inputData);
 
     // test print to make sure table is generated properly
     // std::cout << std::endl;
@@ -71,9 +71,12 @@ bool Huffman::encodeFile(const std::string &inputFile, const std::string &output
     out.write(reinterpret_cast<const char*>(&bitCount), sizeof(bitCount));
 
     // Output packed bytes of encoded data
-    if (codeTable[0].length) {
+    if (!packedBytes.empty()) {
         out.write(reinterpret_cast<const char*>(packedBytes.data()),
                   static_cast<std::streamsize>(packedBytes.size()));
+    } else {
+        std::cout << "\nWARNING: Byte vector is empty\n";
+        return false;
     }
 
     clearHuffmanTree(root);
@@ -275,7 +278,7 @@ std::string Huffman::binaryToString(int bin, int length) {
  * @param data 
  * @return std::vector<unsigned char> 
  */
-std::vector<unsigned char> Huffman::bytePack(encoding table[], std::string &data) {
+std::vector<unsigned char> Huffman::bytePack(encoding table[], int size, std::string &data) {
     unsigned char currentByte = 0;
     int bitIndex = 0;
     std::string bits;
@@ -284,7 +287,7 @@ std::vector<unsigned char> Huffman::bytePack(encoding table[], std::string &data
     for (unsigned char c : data)
     {
         // Search table for matching character index
-        for (int i = 0; table[i].length != 0; i++) {
+        for (int i = 0; i < size; i++) {
             if (table[i].ch == c) {
                 bits += table[i].code;
                 break;
