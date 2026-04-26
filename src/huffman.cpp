@@ -28,7 +28,6 @@ bool Huffman::encodeFile(const std::string &inputFile, const std::string &output
 
     int freqTable[256] = {0};
     encoding codeTable[256] = {0};
-    unsigned char lengthTable[256] = {0};
     int tableSize = sizeof(codeTable) / sizeof(codeTable[0]);
 
     if (readFile(inputFile, inputData) == false) {
@@ -57,9 +56,9 @@ bool Huffman::encodeFile(const std::string &inputFile, const std::string &output
         return false;
     }
 
-    // Header: bit length and character information
+    // Header: only information on encoding bit length, in the order of ASCII table
     for (int i = 0; i < tableSize; i++) {
-        out.write(reinterpret_cast<const char*>(&lengthTable[i]), sizeof(lengthTable[0]));
+        out.write(reinterpret_cast<const char*>(&codeTable[i].length), sizeof(codeTable[0].length));
     }
 
     // Header: number of valid bits in encoded file
