@@ -2,6 +2,7 @@
 *.txt
 *.huf
 *.bin
+*.vscode
 
 tester.cpp
 huffman_example.h
