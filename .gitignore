@@ -1,0 +1,8 @@
+*.exe
+*.txt
+*.huf
+*.bin
+
+tester.cpp
+huffman_example.h
+huffman_example.cpp
