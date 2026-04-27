@@ -51,10 +51,7 @@ bool Huffman::encodeFile(const std::string &inputFile, const std::string &output
     // }
 
     std::ofstream out(outputFile, std::ios::binary);
-    if (!out) {
-        std::cerr << "Failed to open output file: " << outputFile << '\n';
-        return false;
-    }
+    if (!out) return false;
 
     // Header: only information on encoding bit length, in the order of ASCII table
     for (int i = 0; i < tableSize; i++) {
@@ -84,7 +81,57 @@ bool Huffman::encodeFile(const std::string &inputFile, const std::string &output
 }
 
 bool Huffman::decodeFile(const std::string &inputFile, const std::string &outputFile) {
-    // WIP
+    std::ifstream in(inputFile, std::ios::binary);
+    if (!in) std::cerr << "Error opening compressed file\n";
+
+    // Read array of bit length from header
+    encoding codeTable[256];
+    int tableSize = sizeof(codeTable) / sizeof(codeTable[0]);
+    int f;
+    for (int i = 0; i < tableSize; i++) {
+        in.read(reinterpret_cast<char*>(&f), sizeof(f));
+        codeTable[i].length = f;
+        codeTable[i].ch = i;
+    }
+
+    buildCodeTable(codeTable, tableSize);
+
+    // Read bit count from header
+    uint32_t bitCount = 0;
+    in.read(reinterpret_cast<char*>(&bitCount), sizeof(bitCount));
+    if (!in) std::cerr << "Failed to read bit count from header" << std::endl;
+
+    // Read binary file into a vector; each element holds 1 byte
+    std::vector<unsigned char> packedBytes;
+    char byte = 0;
+    for (int i = 0; i < bitCount; i++) {
+        in.get(byte);
+        packedBytes.push_back(static_cast<unsigned char>(byte));
+    }
+    
+    std::string bitString = byteUnpack(packedBytes, static_cast<unsigned int>(bitCount));
+
+    std::ofstream out("output.txt", std::ios::binary);
+    if (!out) std::cerr << "Failed to output decompressed file";
+
+    // Decoding bit string into the original text string
+    std::string decoded;
+    std::string currentCode;
+
+    for (char bit : bitString) {
+        currentCode += bit;
+
+        for (int i = 0; i < tableSize; ++i) {
+            if (!codeTable[i].code.empty() && codeTable[i].code == currentCode) {
+                decoded += static_cast<char>(i);
+                currentCode.clear();
+                break;
+            }
+        }
+    }
+
+    out.write(decoded.c_str(), static_cast<std::streamsize>(decoded.size()));
+
     return true;
 }
 
@@ -162,9 +209,7 @@ void Huffman::clearHuffmanTree(Node* root) {
  */
 bool Huffman::readFile(const std::string &inFile, std::string &data) {
     std::ifstream in(inFile, std::ios::binary);
-    if (!in) {
-        return false;
-    }
+    if (!in) return false;
     data.assign((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
     return true;
 }
@@ -320,6 +365,33 @@ std::vector<unsigned char> Huffman::bytePack(encoding table[], int size, std::st
     }
 
     return bytes;
+}
+
+/**
+ * @brief Takes in vector of bytes and combines them into a single string of bits
+ * 
+ * @param v 
+ * @param validBits The amount of encoded bits that are from the original text (does not include padded bits)
+ * @return std::string 
+ */
+std::string Huffman::byteUnpack(std::vector<unsigned char> v, unsigned int validBits) {
+    std::string bitString;
+    unsigned int bitsRead = 0;
+
+    for (unsigned char c : v) {
+        for (int i = 7; i >= 0 && bitsRead < validBits; --i)
+        {
+            bitString += ((c >> i) & 1) ? '1' : '0';
+            ++bitsRead;
+        }
+
+        if (bitsRead >= validBits)
+        {
+            break;
+        }
+    }
+    
+    return bitString;
 }
 
 // *** Test functions ***
