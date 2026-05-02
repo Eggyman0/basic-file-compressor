@@ -1,4 +1,4 @@
-#include "Huffman.h"
+#include "huffman.h"
 #include <fstream>
 #include <iostream>
 #include <string>

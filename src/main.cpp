@@ -1,4 +1,5 @@
-#include "Huffman.h"
+#include "huffman.h"
+#include "LZ77.h"
 #include <iostream>
 
 using namespace std;
