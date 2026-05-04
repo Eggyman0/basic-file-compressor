@@ -1,49 +1,122 @@
-#include "Huffman.h"
 #include <iostream>
+#include <limits>
+#include <string>
+
+#include "huffman.h"
+#include "LZ77.h"
 
 using namespace std;
-void choose(int choice, Huffman huff);
 
-int main() {
-    Huffman huff;
-    char yesno;
-    int choice;
+int promptInt(const string& prompt, int minValue, int maxValue) {
+    int value;
+    while (true) {
+        cout << prompt;
+        if (cin >> value && value >= minValue && value <= maxValue) {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return value;
+        }
 
-    cout << "Would you like to encode or decode a file? (Y/N)\n";
-    cin >> yesno;
-    if (yesno == 'Y' || yesno == 'y') {
-        cout << "1) Encode File\n2) Decode File\n";
-        cin >> choice;
-        choose(choice, huff);
+        cout << "Invalid selection. Please enter a number from "
+                  << minValue << " to " << maxValue << ".\n";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
-    
-    return 0;
 }
 
-void choose (int choice, Huffman huff) {
-    string file;
-    switch (choice) {
-    case 1:
-        cout << "Enter input text file (.txt)\n";
-        cin >> file;
-        if (huff.encodeFile(file, "compressed.bin")) 
-            cout << "\nFile compressed successfully\n";
-        else
-            cerr << "Error in file compression occured\n";
-        break;
-
-    case 2:
-        cout << "Enter name of compressed file:\n";
-        cin >> file;
-        if (huff.decodeFile(file, "output.txt"))
-            cout << "\nFile decoded successfully\n";
-        else
-            cerr << "Error in file decoding occured\n";
-        
-        break;
-
-    default:
-        
-        break;
+string promptLine(const string& prompt) {
+    string value;
+    while (true) {
+        cout << prompt;
+        getline(cin, value);
+        if (!value.empty()) {
+            return value;
+        }
+        cout << "Input cannot be empty. Please try again.\n";
     }
+}
+
+string defaultOutputName(const string& inputFile, bool compress) {
+    if (compress) {
+        return inputFile + ".bin";
+    }
+    return inputFile + ".txt";
+}
+
+bool runOperation(int actionChoice, int methodChoice, const string& inputFile, const string& outputFile) {
+    bool success = false;
+
+    if (methodChoice == 1) {
+        Huffman huffman;
+        if (actionChoice == 1) {
+            success = huffman.encodeFile(inputFile, outputFile);
+        } else {
+            success = huffman.decodeFile(inputFile, outputFile);
+        }
+    } else {
+        LZ77 lz77;
+        if (actionChoice == 1) {
+            success = lz77.encodeFile(inputFile, outputFile);
+        } else {
+            success = lz77.decodeFile(inputFile, outputFile);
+        }
+    }
+
+    return success;
+}
+
+int main() {
+    cout << "=======================================\n";
+    cout << "         Basic File Compressor\n";
+    cout << "=======================================\n";
+
+    while (true) {
+        cout << "\nMenu:\n";
+        cout << "  1) Compress a file\n";
+        cout << "  2) Decompress a file\n";
+        cout << "  3) Help me\n";
+        cout << "  4) Exit\n";
+
+        int actionChoice = promptInt("Choose an option: ", 1, 4);
+
+        if (actionChoice == 4) {
+            cout << "Exiting program.\n";
+            break;
+        }
+
+        if (actionChoice == 3) {
+            cout << "IDK LOL\n";
+        } else {
+            cout << "\nCompression methods:\n";
+            cout << "  1) Huffman\n";
+            cout << "  2) LZ77\n";
+            int methodChoice = promptInt("Choose a method: ", 1, 2);
+
+            string inputFile = promptLine("\nEnter the input file name/path: ");
+
+            cout << "\nEnter the output file name/path\n";
+            cout << "(press Enter to use the default name): ";
+            string outputFile;
+            getline(cin, outputFile);
+            if (outputFile.empty()) {
+                outputFile = defaultOutputName(inputFile, actionChoice == 1);
+            }
+
+            cout << "\nRunning "
+                    << ((actionChoice == 1) ? "compression" : "decompression")
+                    << " using "
+                    << ((methodChoice == 1) ? "Huffman" : "LZ77")
+                    << "...\n";
+
+            bool success = runOperation(actionChoice, methodChoice, inputFile, outputFile);
+
+            if (success) {
+                cout << "Operation completed successfully.\n";
+                cout << "Output: " << outputFile << "\n";
+            } else {
+                cout << "Operation failed. Please verify the file path and selected method.\n";
+            }
+        }
+    }
+
+    return 0;
 }
