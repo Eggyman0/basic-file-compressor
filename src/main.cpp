@@ -7,81 +7,11 @@
 
 using namespace std;
 
-int promptInt(const string& prompt, int minValue, int maxValue) { // integer input for prompt
-    int value;
-    while (true) {
-        cout << prompt;
-        if (cin >> value && value >= minValue && value <= maxValue) {
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            return value;
-        }
-
-        cout << "Invalid selection. Please enter a number from "
-                  << minValue << " to " << maxValue << ".\n";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    }
-}
-
-string promptLine(const string& prompt) {
-    string value;
-    while (true) {
-        cout << prompt;
-        getline(cin, value);
-        if (!value.empty()) {
-            return value;
-        }
-        cout << "Input cannot be empty. Please try again.\n";
-    }
-}
-
-string defaultOutputName(const string& inputFile, bool compress) {
-    string fileName;
-
-    // Gets rid of file type at the end of input file name
-    for (int i = 0; i < inputFile.length(); i++) {
-        if (inputFile[i] == '.') {
-            fileName = inputFile.substr(0, i);
-            break;
-        }
-    }
-
-    return fileName;
-}
-
-bool runOperation(int actionChoice, int methodChoice, const string& inputFile, string& outputFile) {
-    bool success = false;
-    bool dotFound = false;
-
-    for (int i = 0; i < outputFile.length(); i++) {
-        if (outputFile[i] == '.') dotFound = true;
-    }
-
-    if (!dotFound) {
-        if (actionChoice == 1)
-            outputFile += ".bin";
-        else
-            outputFile += ".txt";
-    }
-
-    if (methodChoice == 1) {
-        Huffman huffman;
-        if (actionChoice == 1) {
-            success = huffman.encodeFile(inputFile, outputFile);
-        } else {
-            success = huffman.decodeFile(inputFile, outputFile);
-        }
-    } else {
-        LZ77 lz77;
-        if (actionChoice == 1) {
-            success = lz77.encodeFile(inputFile, outputFile);
-        } else {
-            success = lz77.decodeFile(inputFile, outputFile);
-        }
-    }
-
-    return success;
-}
+int promptInt(const string& prompt, int minValue, int maxValue);
+string promptLine(const string& prompt);
+string defaultOutputName(const string& inputFile, bool compress);
+bool runOperation(int actionChoice, int methodChoice, const string& inputFile, string& outputFile);
+void removeQuotations(string &fileName);
 
 int main() {
     cout << "=======================================\n";
@@ -138,4 +68,85 @@ int main() {
     }
 
     return 0;
+}
+
+int promptInt(const string& prompt, int minValue, int maxValue) { // integer input for prompt
+    int value;
+    while (true) {
+        cout << prompt;
+        if (cin >> value && value >= minValue && value <= maxValue) {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return value;
+        }
+
+        cout << "Invalid selection. Please enter a number from "
+                  << minValue << " to " << maxValue << ".\n";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+}
+
+string promptLine(const string& prompt) {
+    string value;
+    while (true) {
+        cout << prompt;
+        getline(cin, value);
+        if (!value.empty()) {
+            if (value[0] == '"') removeQuotations(value);
+            return value;
+        }
+        cout << "Input cannot be empty. Please try again.\n";
+    }
+}
+
+string defaultOutputName(const string& inputFile, bool compress) {
+    string fileName;
+
+    // Gets rid of file type at the end of input file name
+    for (int i = 0; i < inputFile.length(); i++) {
+        if (inputFile[i] == '.') {
+            fileName = inputFile.substr(0, i);
+            break;
+        }
+    }
+
+    return fileName;
+}
+
+bool runOperation(int actionChoice, int methodChoice, const string& inputFile, string& outputFile) {
+    bool success = false;
+    bool dotFound = false;
+
+    for (int i = 0; i < outputFile.length(); i++) {
+        if (outputFile[i] == '.') dotFound = true;
+    }
+
+    if (!dotFound) {
+        if (actionChoice == 1)
+            outputFile += ".bin";
+        else
+            outputFile += ".txt";
+    }
+
+    if (methodChoice == 1) {
+        Huffman huffman;
+        if (actionChoice == 1) {
+            success = huffman.encodeFile(inputFile, outputFile);
+        } else {
+            success = huffman.decodeFile(inputFile, outputFile);
+        }
+    } else {
+        LZ77 lz77;
+        if (actionChoice == 1) {
+            success = lz77.encodeFile(inputFile, outputFile);
+        } else {
+            success = lz77.decodeFile(inputFile, outputFile);
+        }
+    }
+
+    return success;
+}
+
+void removeQuotations(string &fileName) {
+    fileName = fileName.substr(1, fileName.length() - 2);
 }
