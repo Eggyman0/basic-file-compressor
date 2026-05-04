@@ -42,12 +42,24 @@ int main() {
 
             string inputFile = promptLine("\nEnter the input file name/path: ");
 
+            int lastSlash;
+            for (int i = 0; i < inputFile.length(); i++) {
+                if (inputFile[i] == '\\') lastSlash = i;
+            }
+            string filePath = inputFile.substr(0, lastSlash + 1);
+
             cout << "\nEnter the output file name/path\n";
             cout << "(press Enter to use the default name): ";
             string outputFile;
             getline(cin, outputFile);
             if (outputFile.empty()) {
                 outputFile = defaultOutputName(inputFile, actionChoice == 1);
+            } else {
+                lastSlash = 0;
+                for (int i = 0; i < outputFile.length(); i++) {
+                    if (outputFile[i] == '\\') lastSlash = i;
+                }
+                if (lastSlash == 0) outputFile = filePath + outputFile;
             }
 
             cout << "\nRunning "
@@ -61,10 +73,14 @@ int main() {
             if (success) {
                 cout << "Operation completed successfully.\n";
                 cout << "Output: " << outputFile << "\n";
+                cout << "Press enter to continue: ";
+                string temp;
+                getline(cin, temp);
             } else {
                 cout << "Operation failed. Please verify the file path and selected method.\n";
             }
         }
+        system("cls");
     }
 
     return 0;
