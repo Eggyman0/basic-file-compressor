@@ -7,7 +7,7 @@
 
 using namespace std;
 
-int promptInt(const string& prompt, int minValue, int maxValue) {
+int promptInt(const string& prompt, int minValue, int maxValue) { // integer input for prompt
     int value;
     while (true) {
         cout << prompt;
@@ -36,14 +36,33 @@ string promptLine(const string& prompt) {
 }
 
 string defaultOutputName(const string& inputFile, bool compress) {
-    if (compress) {
-        return inputFile + ".bin";
+    string fileName;
+
+    // Gets rid of file type at the end of input file name
+    for (int i = 0; i < inputFile.length(); i++) {
+        if (inputFile[i] == '.') {
+            fileName = inputFile.substr(0, i);
+            break;
+        }
     }
-    return inputFile + ".txt";
+
+    return fileName;
 }
 
-bool runOperation(int actionChoice, int methodChoice, const string& inputFile, const string& outputFile) {
+bool runOperation(int actionChoice, int methodChoice, const string& inputFile, string& outputFile) {
     bool success = false;
+    bool dotFound = false;
+
+    for (int i = 0; i < outputFile.length(); i++) {
+        if (outputFile[i] == '.') dotFound = true;
+    }
+
+    if (!dotFound) {
+        if (actionChoice == 1)
+            outputFile += ".bin";
+        else
+            outputFile += ".txt";
+    }
 
     if (methodChoice == 1) {
         Huffman huffman;

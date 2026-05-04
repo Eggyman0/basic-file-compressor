@@ -22,7 +22,7 @@ Huffman::~Huffman()
  * @return true File compressing successful
  * @return false File compressing failed
  */
-bool Huffman::encodeFile(const std::string &inputFile, const std::string &outputFile) {
+bool Huffman::encodeFile(const std::string &inputFile, std::string &outputFile) {
     Node* root = 0;
     std::string inputData;
 
@@ -80,7 +80,7 @@ bool Huffman::encodeFile(const std::string &inputFile, const std::string &output
     return true;
 }
 
-bool Huffman::decodeFile(const std::string &inputFile, const std::string &outputFile) {
+bool Huffman::decodeFile(const std::string &inputFile, std::string &outputFile) {
     std::ifstream in(inputFile, std::ios::binary);
     if (!in) std::cerr << "Error opening compressed file\n";
 
@@ -111,7 +111,7 @@ bool Huffman::decodeFile(const std::string &inputFile, const std::string &output
     
     std::string bitString = byteUnpack(packedBytes, static_cast<unsigned int>(bitCount));
 
-    std::ofstream out("output.txt", std::ios::binary);
+    std::ofstream out(outputFile, std::ios::binary);
     if (!out) std::cerr << "Failed to output decompressed file";
 
     // Decoding bit string into the original text string

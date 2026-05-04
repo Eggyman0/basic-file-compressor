@@ -67,8 +67,8 @@ public:
     Huffman();
     ~Huffman();
     
-    bool encodeFile(const std::string &inputFile, const std::string &outputFile); // const used so you don't accidentally alter file names
-    bool decodeFile(const std::string &inputFile, const std::string &outputFile); // WIP
+    bool encodeFile(const std::string &inputFile, std::string &outputFile); // const used so you don't accidentally alter file names
+    bool decodeFile(const std::string &inputFile, std::string &outputFile);
 };
 
 #endif
