@@ -15,6 +15,20 @@ Huffman::~Huffman()
 }
 
 /**
+ * @brief Get the next bit from input file stream
+ * Funny placement
+ * 
+ * @param packedBytes 
+ * @param index 
+ * @return unsigned char 
+ */
+unsigned char getBit(std::vector<unsigned char> packedBytes, uint32_t index) {
+    unsigned char byte = packedBytes[index / 8];
+    int shift = 7 - static_cast<int>(index % 8);
+    return (byte >> shift) & 1;
+}
+
+/**
  * @brief Compress input file size using Huffman coding algorithm
  * 
  * @param inputFile 
@@ -41,6 +55,7 @@ bool Huffman::encodeFile(const std::string &inputFile, std::string &outputFile) 
     // recursiveTreePrint(root, 0);
 
     buildCodeTable(codeTable, tableSize);
+    rearrange(codeTable, tableSize);
 
     std::vector<unsigned char> packedBytes = bytePack(codeTable, tableSize, inputData);
 
@@ -51,7 +66,10 @@ bool Huffman::encodeFile(const std::string &inputFile, std::string &outputFile) 
     // }
 
     std::ofstream out(outputFile, std::ios::binary);
-    if (!out) return false;
+    if (!out) {
+        clearHuffmanTree(root);
+        return false;
+    }
 
     // Header: only information on encoding bit length, in the order of ASCII table
     for (int i = 0; i < tableSize; i++) {
@@ -73,6 +91,7 @@ bool Huffman::encodeFile(const std::string &inputFile, std::string &outputFile) 
                   static_cast<std::streamsize>(packedBytes.size()));
     } else {
         std::cout << "\nWARNING: Byte vector is empty\n";
+        clearHuffmanTree(root);
         return false;
     }
 
@@ -80,18 +99,32 @@ bool Huffman::encodeFile(const std::string &inputFile, std::string &outputFile) 
     return true;
 }
 
+/**
+ * @brief Rebuilds canonical Huffman table out of pre-defined bit lengths in input file header.
+ * Encoded bits are then compared to the values from the rebuilt table.
+ * 
+ * @param inputFile 
+ * @param outputFile 
+ * @return true Success
+ * @return false Failed to decode
+ */
 bool Huffman::decodeFile(const std::string &inputFile, std::string &outputFile) {
     std::ifstream in(inputFile, std::ios::binary);
     if (!in) std::cerr << "Error opening compressed file\n";
 
     // Read array of bit length from header
     encoding codeTable[256];
+    const int maxLength = 255;
+    int totalCount[maxLength + 1] = {0};  // Contains amount of times each bit length appears
     int tableSize = sizeof(codeTable) / sizeof(codeTable[0]);
-    int f;
+    int lengthFromFile;
+
     for (int i = 0; i < tableSize; i++) {
-        in.read(reinterpret_cast<char*>(&f), sizeof(f));
-        codeTable[i].length = f;
+        in.read(reinterpret_cast<char*>(&lengthFromFile), sizeof(lengthFromFile));
+        codeTable[i].length = lengthFromFile;
         codeTable[i].ch = i;
+        
+        if (lengthFromFile > 0 && lengthFromFile < maxLength) totalCount[lengthFromFile]++;
     }
 
     buildCodeTable(codeTable, tableSize);
@@ -101,33 +134,46 @@ bool Huffman::decodeFile(const std::string &inputFile, std::string &outputFile) 
     in.read(reinterpret_cast<char*>(&bitCount), sizeof(bitCount));
     if (!in) std::cerr << "Failed to read bit count from header" << std::endl;
 
+    uint32_t byteCount = (bitCount + 7) / 8;
+
     // Read binary file into a vector; each element holds 1 byte
     std::vector<unsigned char> packedBytes;
     char byte = 0;
-    for (int i = 0; i < bitCount; i++) {
+    for (int i = 0; i < byteCount; i++) {
         in.get(byte);
         packedBytes.push_back(static_cast<unsigned char>(byte));
     }
-    
-    std::string bitString = byteUnpack(packedBytes, static_cast<unsigned int>(bitCount));
 
     std::ofstream out(outputFile, std::ios::binary);
     if (!out) std::cerr << "Failed to output decompressed file";
 
-    // Decoding bit string into the original text string
-    std::string decoded;
-    std::string currentCode;
+    std::string decoded;            // contains output text
+    uint32_t bitIndex = 0;          // amount of bits processed from input file
 
-    for (char bit : bitString) {
-        currentCode += bit;
+    while (bitIndex < bitCount) {
+        int currentCode = 0;    // current Huffman code being analysed
+        int first = 0;          // value of first code within a group of a certain bit length
+        int tableIndex = 0;     // keeps track of current index of canonical table
 
-        for (int i = 0; i < tableSize; ++i) {
-            if (!codeTable[i].code.empty() && codeTable[i].code == currentCode) {
-                decoded += static_cast<char>(i);
-                currentCode.clear();
+        for (int len = 1; len <= maxLength; len++) {
+            unsigned char bit = getBit(packedBytes, bitIndex);
+            int count = totalCount[len];
+
+            bitIndex++;
+            currentCode |= bit;
+
+            if (currentCode - totalCount[len] < first) {
+                decoded += codeTable[tableIndex + (currentCode - first)].ch;
                 break;
+            } else {
+                tableIndex += count;
+                first = (first + count) << 1;
+                currentCode <<= 1;
             }
         }
+        currentCode = 0;
+        first = 0;
+        tableIndex = 0;
     }
 
     out.write(decoded.c_str(), static_cast<std::streamsize>(decoded.size()));
@@ -223,7 +269,7 @@ bool Huffman::readFile(const std::string &inFile, std::string &data) {
  */
 void Huffman::buildFreqTable(int table[], const std::string data) {
     for (int i = 0; i < data.size(); i++) {
-        char c = data[i];
+        unsigned char c = data[i];
         table[c]++;
     }
 }
@@ -288,13 +334,22 @@ void Huffman::buildCodeTable(encoding codeTable[], int size) {
             binary <<= 1; // left shift when next element's length is higher
         }
     }
+}
 
+/**
+ * @brief "Sorts" canonical table by ASCII order
+ * It could've been more cleaner but I'm afraid it's too late to change
+ * 
+ * @param table 
+ * @param size 
+ */
+void Huffman::rearrange(encoding table[], int size) {
     // Rearranging table
     encoding temp[256] = {0};
     for (int i = 0; i < size; i++)
-        temp[codeTable[i].ch] = codeTable[i];
+        temp[table[i].ch] = table[i];
     for (int i = 0; i < size; i++)
-        codeTable[i] = temp[i];
+        table[i] = temp[i];
 }
 
 /**

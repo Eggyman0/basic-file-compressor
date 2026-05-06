@@ -55,6 +55,7 @@ private:
     void buildFreqTable(int table[], const std::string inData);
     void generateCodeLengths(Node* n, int depth, encoding table[]);
     void buildCodeTable(encoding codeTable[], int size);
+    void rearrange(encoding table[], int size);
     std::string binaryToString(int bin, int length);
     std::vector<unsigned char> bytePack(encoding table[], int size, std::string &data);
 
