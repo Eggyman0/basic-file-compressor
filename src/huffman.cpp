@@ -422,33 +422,6 @@ std::vector<unsigned char> Huffman::bytePack(encoding table[], int size, std::st
     return bytes;
 }
 
-/**
- * @brief Takes in vector of bytes and combines them into a single string of bits
- * 
- * @param v 
- * @param validBits The amount of encoded bits that are from the original text (does not include padded bits)
- * @return std::string 
- */
-std::string Huffman::byteUnpack(std::vector<unsigned char> v, unsigned int validBits) {
-    std::string bitString;
-    unsigned int bitsRead = 0;
-
-    for (unsigned char c : v) {
-        for (int i = 7; i >= 0 && bitsRead < validBits; --i)
-        {
-            bitString += ((c >> i) & 1) ? '1' : '0';
-            ++bitsRead;
-        }
-
-        if (bitsRead >= validBits)
-        {
-            break;
-        }
-    }
-    
-    return bitString;
-}
-
 // *** Test functions ***
 // Super, incredibly scuffed way of printing a binary tree
 // Root of the tree starts from the left-most column in terminal

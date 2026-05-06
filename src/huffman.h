@@ -59,9 +59,6 @@ private:
     std::string binaryToString(int bin, int length);
     std::vector<unsigned char> bytePack(encoding table[], int size, std::string &data);
 
-    // For decoding
-    std::string byteUnpack(std::vector<unsigned char> v, unsigned int validBits);
-
     // test functions
     void recursiveTreePrint(Node* n, int index);
 public:
