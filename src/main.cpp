@@ -4,13 +4,14 @@
 
 #include "huffman.h"
 #include "LZ77.h"
+#include "LZ77Huffman.h"
 
 using namespace std;
 
 int promptInt(const string& prompt, int minValue, int maxValue);
 string promptLine(const string& prompt);
 string defaultOutputName(const string& inputFile, bool compress);
-bool runOperation(int actionChoice, int methodChoice, const string& inputFile, string& outputFile);
+bool runOperation(int actionChoice, int methodChoice, int typeChoice, const string& inputFile, string& outputFile);
 void removeQuotations(string &fileName);
 
 int main() {
@@ -35,13 +36,22 @@ int main() {
         if (actionChoice == 3) {
             cout << "IDK LOL\n";
         } else {
-            cout << "\nCompression methods:\n";
+            int typeChoice = 0;
+            if (actionChoice == 2) {
+                cout << "Output file type:\n";
+                cout << "  1) .txt\n";
+                cout << "  2) .csv\n";
+                typeChoice = promptInt("Choose a file type: ", 1, 2);
+            }
+            cout << "\nMethod:\n";
             cout << "  1) Huffman\n";
             cout << "  2) LZ77\n";
-            int methodChoice = promptInt("Choose a method: ", 1, 2);
+            cout << "  3) Huffman/LZ77\n";
+            int methodChoice = promptInt("Choose a method: ", 1, 3);
 
             string inputFile = promptLine("\nEnter the input file name/path: ");
 
+            // Check for file location
             int lastSlash;
             for (int i = 0; i < inputFile.length(); i++) {
                 if (inputFile[i] == '\\') lastSlash = i;
@@ -65,10 +75,10 @@ int main() {
             cout << "\nRunning "
                     << ((actionChoice == 1) ? "compression" : "decompression")
                     << " using "
-                    << ((methodChoice == 1) ? "Huffman" : "LZ77")
+                    << ((methodChoice == 1) ? "Huffman" : ((methodChoice == 2) ? "LZ77" : "Huffman/LZ77"))
                     << "...\n";
 
-            bool success = runOperation(actionChoice, methodChoice, inputFile, outputFile);
+            bool success = runOperation(actionChoice, methodChoice, typeChoice, inputFile, outputFile);
 
             if (success) {
                 cout << "Operation completed successfully.\n";
@@ -129,7 +139,7 @@ string defaultOutputName(const string& inputFile, bool compress) {
     return fileName;
 }
 
-bool runOperation(int actionChoice, int methodChoice, const string& inputFile, string& outputFile) {
+bool runOperation(int actionChoice, int methodChoice, int typeChoice, const string& inputFile, string& outputFile) {
     bool success = false;
     bool dotFound = false;
 
@@ -138,26 +148,55 @@ bool runOperation(int actionChoice, int methodChoice, const string& inputFile, s
     }
 
     if (!dotFound) {
-        if (actionChoice == 1)
-            outputFile += ".bin";
-        else
-            outputFile += ".txt";
+        if (actionChoice == 1) {
+            switch (methodChoice) {
+            case 1:
+                outputFile += ".huf";
+                break;
+            case 2:
+                outputFile += ".lz";
+                break;
+            case 3:
+                outputFile += ".lzh";
+                break;
+            }
+        } else {
+            switch (typeChoice) {
+            case 1:
+                outputFile += ".txt";
+                break;
+            case 2:
+                outputFile += ".csv";
+                break;
+            }
+        }
     }
 
-    if (methodChoice == 1) {
-        Huffman huffman;
+    Huffman huffman;
+    switch (methodChoice) {
+    case 1:
         if (actionChoice == 1) {
             success = huffman.encodeFile(inputFile, outputFile);
         } else {
             success = huffman.decodeFile(inputFile, outputFile);
         }
-    } else {
+        break;
+    case 2:
         LZ77 lz77;
         if (actionChoice == 1) {
             success = lz77.encodeFile(inputFile, outputFile);
         } else {
             success = lz77.decodeFile(inputFile, outputFile);
         }
+        break;
+    case 3:
+        LZ77Huffman lzh;
+        if (actionChoice == 1) {
+            success = lzh.encodeFile(inputFile, outputFile);
+        } else {
+            success = lzh.decodeFile(inputFile, outputFile);
+        }
+        break;
     }
 
     return success;

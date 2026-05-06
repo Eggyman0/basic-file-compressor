@@ -3,7 +3,17 @@
 *.huf
 *.bin
 *.vscode
+*.huf
+*.lz
+*.lzh
+*.csv
 
 tester.cpp
 huffman_example.h
 huffman_example.cpp
+
+# Exceptions
+!beemoviescript.txt
+!lorem_ipsum.txt
+!repeatedtxt.txt
+!large_compression_test.csv
