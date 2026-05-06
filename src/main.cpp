@@ -34,11 +34,23 @@ int main() {
         }
 
         if (actionChoice == 3) {
-            cout << "IDK LOL\n";
+            cout << "\nThis program can compress/decompress text/csv files using three methods:\n"
+                 << "  - Huffman Coding\n  - LZ77\n  - A hybrid algorithm that combines both\n"
+                 << "\nThe user can input file names either by entering the file name (1) if it\n"
+                 << "is in the same folder, or by pasting its direct path (2) into the terminal.\n"
+                 << "  1) input.txt\n  2) C:\\misc_folder\\another_folder\\input.txt\n"
+                 << "The same also applies for inputting the file name/path for your output file.\n"
+                 << "NOTE: If only a file name is entered for the output file, the file will\n"
+                 << "be automatically placed in the same location the input file originated from.\n"
+                 << "\nIf the program gets stuck, press 'CTRL + C' in order to close the terminal.\n";
+
+            cout << "\nPress enter to continue: ";
+            string temp;
+            getline(cin, temp);
         } else {
             int typeChoice = 0;
             if (actionChoice == 2) {
-                cout << "Output file type:\n";
+                cout << "\nOutput file type:\n";
                 cout << "  1) .txt\n";
                 cout << "  2) .csv\n";
                 typeChoice = promptInt("Choose a file type: ", 1, 2);
@@ -73,10 +85,10 @@ int main() {
             }
 
             cout << "\nRunning "
-                    << ((actionChoice == 1) ? "compression" : "decompression")
-                    << " using "
-                    << ((methodChoice == 1) ? "Huffman" : ((methodChoice == 2) ? "LZ77" : "Huffman/LZ77"))
-                    << "...\n";
+                 << ((actionChoice == 1) ? "compression" : "decompression")
+                 << " using "
+                 << ((methodChoice == 1) ? "Huffman" : ((methodChoice == 2) ? "LZ77" : "Huffman/LZ77"))
+                 << "...\n";
 
             bool success = runOperation(actionChoice, methodChoice, typeChoice, inputFile, outputFile);
 
