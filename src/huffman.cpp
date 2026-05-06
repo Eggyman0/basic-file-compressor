@@ -22,7 +22,7 @@ Huffman::~Huffman()
  * @param index 
  * @return unsigned char 
  */
-unsigned char getBit(std::vector<unsigned char> packedBytes, uint32_t index) {
+unsigned char getBit(const std::vector<unsigned char> &packedBytes, uint32_t index) {
     unsigned char byte = packedBytes[index / 8];
     int shift = 7 - static_cast<int>(index % 8);
     return (byte >> shift) & 1;
@@ -145,7 +145,10 @@ bool Huffman::decodeFile(const std::string &inputFile, std::string &outputFile) 
     }
 
     std::ofstream out(outputFile, std::ios::binary);
-    if (!out) std::cerr << "Failed to output decompressed file";
+    if (!out) {
+        std::cerr << "Failed to output decompressed file";
+        return false;
+    }
 
     std::string decoded;            // contains output text
     uint32_t bitIndex = 0;          // amount of bits processed from input file
@@ -162,7 +165,7 @@ bool Huffman::decodeFile(const std::string &inputFile, std::string &outputFile) 
             bitIndex++;
             currentCode |= bit;
 
-            if (currentCode - totalCount[len] < first) {
+            if (currentCode < first + count) {
                 decoded += codeTable[tableIndex + (currentCode - first)].ch;
                 break;
             } else {
